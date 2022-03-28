@@ -6,6 +6,13 @@ WIDTH, HEIGHT = 330, 175
 window = pg.display.set_mode((WIDTH, HEIGHT))
 pg.display.set_caption('Selection Sort Visualization')
 
+def button_setup():
+    rect = []
+    rect.append([pg.Rect(15, 100, 90, 50), 'Run'])
+    rect.append([pg.Rect(115, 100, 90, 50), 'Random'])
+    rect.append([pg.Rect(215, 100, 90, 50), 'Step'])
+    return rect
+
 def create(size):
     arr = []
     for i in range(size):
@@ -21,8 +28,6 @@ def draw_cursor(window, arr, font, index, min, cur):
     txt = pg.font.SysFont('Arial', 15)
     x, y, s = 15, 30, 30
 
-    ts = txt.render('cur', True, (0, 0, 0))
-    window.blit(ts, (x + s*index, y-20))
     pg.draw.rect(window, (0, 0, 0), (x + s*index, y, 22, 22), 1)
 
     ts = font.render(str(arr[min]), True, (0, 255, 0))
@@ -32,6 +37,8 @@ def draw_cursor(window, arr, font, index, min, cur):
 
     ts = font.render(str(arr[cur]), True, (255, 0, 0))
     window.blit(ts, (x + s*cur, y))
+    ts = txt.render('cur', True, (0, 0, 0))
+    window.blit(ts, (x + s*cur, y+y))
 
 def draw(window, arr, index, min, cur):
     window.fill((255, 255, 255))
@@ -45,9 +52,14 @@ def draw(window, arr, index, min, cur):
 
 def draw_button(window, rect):
     font = pg.font.SysFont('Arial', 20)
-    pg.draw.rect(window, (0, 0, 0), rect, 3)
-    ts = font.render('Restart', True, (0, 0, 0))
-    window.blit(ts, (rect.x+15, rect.y+15))
+    
+    for r in rect:
+        pg.draw.rect(window, (0, 0, 0), r[0], 3)
+        ts = font.render(r[1], True, (0, 0, 0))
+        window.blit(ts, (r[0].x+15, r[0].y+15))
+
+def step(arr, index, min):
+    return arr[index], arr[min], index + 1, index + 1, index + 2
 
 def main(window):
     running = True
@@ -56,7 +68,8 @@ def main(window):
     SIZE = 10
     arr = create(SIZE)
     index, min, cur = 0, 0, 1
-    rect = pg.Rect(115, 100, 100, 50)
+    rect = button_setup()
+    run = False
 
     while running:
         clock.tick(fps)
@@ -65,29 +78,37 @@ def main(window):
         draw(window, arr, index, min, cur)
         draw_button(window, rect)
 
-        if frame >= fps:
-            if index < SIZE-1:
-                min, cur = sort(arr, min, cur)
-                if cur == SIZE:
-                    temp = arr[min]
-                    arr[min] = arr[index]
-                    arr[index] = temp
-                    index += 1
-                    min = index
-                    cur = min + 1
-            frame = 0
-        else:
-            frame += 1
+        if run:
+            if frame >= fps:
+                if index < SIZE-1:
+                    min, cur = sort(arr, min, cur)
+                    if cur == SIZE:
+                        arr[min], arr[index], index, min, cur = step(arr, index, min)
+                else:
+                    run = False
+                frame = 0
+            else:
+                frame += 1
 
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 running = False
                 break
             if event.type == pg.MOUSEBUTTONDOWN:
-                if rect.collidepoint(x, y):
+                if rect[0][0].collidepoint(x, y):
+                    run = True
+                    frame = 0
+                if  rect[1][0].collidepoint(x, y):
                     arr = create(SIZE)
+                    run = False
                     index, min, cur = 0, 0, 1
-
+                if rect[2][0].collidepoint(x, y):
+                    run = False
+                    if index < SIZE-1:
+                        min, cur = sort(arr, min, cur)
+                    if cur == SIZE:
+                        arr[min], arr[index], index, min, cur = step(arr, index, min)
+                
         pg.display.update()
     pg.quit()
 
