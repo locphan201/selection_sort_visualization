@@ -50,13 +50,17 @@ def draw(window, arr, index, min, cur):
     if cur < len(arr):
         draw_cursor(window, arr, font, index, min, cur)
 
-def draw_button(window, rect):
+def draw_button(window, rect, run):
     font = pg.font.SysFont('Arial', 20)
     
     for r in rect:
         pg.draw.rect(window, (0, 0, 0), r[0], 3)
-        ts = font.render(r[1], True, (0, 0, 0))
-        window.blit(ts, (r[0].x+15, r[0].y+15))
+        if run and r[1] == 'Step':
+            ts = font.render('Stop', True, (0, 0, 0))
+            window.blit(ts, (r[0].x+15, r[0].y+15))
+        else:
+            ts = font.render(r[1], True, (0, 0, 0))
+            window.blit(ts, (r[0].x+15, r[0].y+15))
 
 def step(arr, index, min):
     return arr[index], arr[min], index + 1, index + 1, index + 2
@@ -76,7 +80,7 @@ def main(window):
         x, y = pg.mouse.get_pos()
 
         draw(window, arr, index, min, cur)
-        draw_button(window, rect)
+        draw_button(window, rect, run)
 
         if run:
             if frame >= fps:
@@ -103,11 +107,13 @@ def main(window):
                     run = False
                     index, min, cur = 0, 0, 1
                 if rect[2][0].collidepoint(x, y):
-                    run = False
-                    if index < SIZE-1:
-                        min, cur = sort(arr, min, cur)
-                    if cur == SIZE:
-                        arr[min], arr[index], index, min, cur = step(arr, index, min)
+                    if run:
+                        run = False
+                    else:
+                        if index < SIZE-1:
+                            min, cur = sort(arr, min, cur)
+                        if cur == SIZE:
+                            arr[min], arr[index], index, min, cur = step(arr, index, min)
                 
         pg.display.update()
     pg.quit()
